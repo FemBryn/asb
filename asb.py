@@ -229,7 +229,7 @@ class ASB:
         magic = stream.read(4)
         assert magic == b'ASB ', f"Invalid file magic '{magic.decode('utf-8')}', expected 'ASB '"
         version = stream.read_u32()
-        assert version == 0x417, f"Unsupported version {hex(version)}, expected 0x417"
+        assert version == 0x410, f"Unsupported version {hex(version)}, expected 0x410"
 
         filename_offset = stream.read_u32()
         command_count = stream.read_u32()
@@ -266,8 +266,8 @@ class ASB:
         as_markings_offset = this.stream.read_u32()
         expression_offset = this.stream.read_u32()
         command_groups_offset = this.stream.read_u32()
-        material_blend_offset = this.stream.read_u32()
-        assert this.stream.tell() == 0x6C, f"Invalid header size {this.stream.tell()}, should be 0x6C"
+
+        assert this.stream.tell() == 0x68, f"Invalid header size {this.stream.tell()}, should be 0x68"
 
         commands_offset = this.stream.tell()
 
@@ -287,7 +287,7 @@ class ASB:
             this.commands.append(this.read_command())
 
         node_offset = this.stream.tell()
-        assert node_offset == 0x6C + command_count * 0x30, f"Error reading commands"
+        assert node_offset == 0x68 + command_count * 0x2C, f"Error reading commands"
 
         this.stream.seek(event_offsets_offset)
         for i in range(event_count):
@@ -323,10 +323,6 @@ class ASB:
         this.stream.seek(as_markings_offset)
         for i in range(this.stream.read_u32()):
             this.as_markings.append(this.read_as_marking())
-        
-        this.stream.seek(material_blend_offset)
-        for i in range(this.stream.read_u32()):
-            this.material_blend.append(this.read_material_blend())
         
         this.stream.seek(state_transition_offset)
         for i in range(this.stream.read_u32()):
@@ -440,18 +436,19 @@ class ASB:
     def read_command(self):
         command = {}
         command["Name"] = self.string_pool.read_string(self.stream.read_u32())
-        tag_offset = self.stream.read_u32()
-        if tag_offset != 0:
-            pos = self.stream.tell()
-            self.stream.seek(tag_offset)
-            command["Tags"] = self.read_tag_group()
-            self.stream.seek(pos)
+        #tag_offset = self.stream.read_u32()
+        #if tag_offset != 0:
+        #    pos = self.stream.tell()
+        #    self.stream.seek(tag_offset)
+        #    command["Tags"] = self.read_tag_group()
+        #    self.stream.seek(pos)
         command["Unknown 1"] = self.parse_param("float")
         command["Ignore Same Command"] = self.parse_param("bool")
         command["Interpolation Type"] = self.stream.read_u32()
         command["GUID"] = self.read_guid()
         command["Node Index"] = self.stream.read_u16()
         self.stream.read(2) # a second node index in AINB but I haven't seen it ever used and it's always 0 so might be padding
+        print(command)
         return command
     
     def read_event_param(self):
@@ -676,12 +673,12 @@ class ASB:
         node["Node Type"] = NodeType(self.stream.read_u16()).name
         sync_count = self.stream.read_u8()
         node["No State Transition"] = bool(self.stream.read_u8())
-        tag_offset = self.stream.read_u32()
-        if tag_offset != 0:
-            pos = self.stream.tell()
-            self.stream.seek(tag_offset)
-            node["Tags"] = self.read_tag_group()
-            self.stream.seek(pos)
+        #tag_offset = self.stream.read_u32()
+        #if tag_offset != 0:
+        #    pos = self.stream.tell()
+        #    self.stream.seek(tag_offset)
+        #    node["Tags"] = self.read_tag_group()
+        #    self.stream.seek(pos)
         body_offset = self.stream.read_u32()
         calc_ctrl_index = self.stream.read_u16()
         calc_ctrl_count = self.stream.read_u16()
@@ -1231,12 +1228,12 @@ class ASB:
         # 5 = return provided end with no calc
         # else return start frame
         entry["Calc Mode"] = InitialFrameCalcMode(self.stream.read_u32()).name
-        tag_offset = self.stream.read_u32()
-        if tag_offset:
-            pos = self.stream.tell()
-            self.stream.seek(tag_offset)
-            entry["Tags"] = self.read_tag_group()
-            self.stream.seek(pos)
+        #tag_offset = self.stream.read_u32()
+       #if tag_offset:
+        #   pos = self.stream.tell()
+        #   self.stream.seek(tag_offset)
+        #   entry["Tags"] = self.read_tag_group()
+        #   self.stream.seek(pos)
         entry["Unknown 1"] = self.parse_param("bool") # match tag or anim?
         entry["Bone 1"] = self.parse_param("string") # Used if flag is 4
         entry["Bone 2"] = self.parse_param("string") # Used if flag is 4
@@ -1491,8 +1488,8 @@ class ASB:
      # Let's just do this all now so we don't have to jump back and fill in the offsets later
     def calc_offsets(self, body_sizes, event_count, sync_count, tag_groups, buffer):
         offsets = {}
-        offset = 0x6C
-        offset += 0x30 * len(self.commands)
+        offset = 0x68
+        offset += 0x2C * len(self.commands)
         offset += 0x24 * len(self.nodes)
         offsets["Event Offsets"] = offset
         offset += 0x4 * event_count

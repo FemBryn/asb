@@ -80,7 +80,7 @@ def init_dpg():
 
         with dpg.collapsing_header(tag="asbtojson", label="ASB to JSON"):
             dpg.add_button(label="Browse for input ASB file", callback=open_file, user_data="asbtojson_input")
-            dpg.add_text(tag="asbtojson_input", default_value="Input file placeholder")
+            dpg.add_text(tag="asbtojson_input", default_value="Output Folder PlaceHolder")
             dpg.add_button(label="Browse for output folder (optional)", callback=open_dir, user_data="asbtojson_output")
 
             dpg.add_text(tag="asbtojson_output", default_value="Output folder placeholder")
