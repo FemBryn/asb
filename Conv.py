@@ -5,5 +5,6 @@ import converter
 # optional compress_file argument specifies whether or not to compress the file with zstd
 
 # optional baev_path argument loads the corresponding BAEV file with the ASB    
-converter.asb_to_json("C:\\Users\\brend\\OneDrive\\Documents\\GitHub\\asb\\WeaponRollerNormal.root.asb")
-converter.json_to_asb("C:\\Users\\brend\\OneDrive\\Documents\\GitHub\\asb\\WeaponRollerNormal.root.json")
+Path = "C:\\Users\\brend\\OneDrive\\Documents\\GitHub\\asb\\"
+Path += "WeaponBrushHeavy.root.asb"
+converter.asb_to_json(Path)
