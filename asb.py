@@ -270,7 +270,6 @@ class ASB:
         assert this.stream.tell() == 0x68, f"Invalid header size {this.stream.tell()}, should be 0x68"
 
         commands_offset = this.stream.tell()
-
         this.stream.seek(blackboard_offset)
         this.blackboard = Blackboard(this.stream, this.string_pool).blackboard
 
@@ -331,7 +330,6 @@ class ASB:
         this.stream.seek(node_offset)
         for i in range(node_count):
             this.nodes.append(this.read_node(sync_control_indices_offset))
-
         return this
 
     @classmethod
@@ -436,12 +434,11 @@ class ASB:
     def read_command(self):
         command = {}
         command["Name"] = self.string_pool.read_string(self.stream.read_u32())
-        #tag_offset = self.stream.read_u32()
-        #if tag_offset != 0:
-        #    pos = self.stream.tell()
-        #    self.stream.seek(tag_offset)
-        #    command["Tags"] = self.read_tag_group()
-        #    self.stream.seek(pos)
+#        $tag_offset = self.stream.read_u32()
+#            pos = self.stream.tell()
+ #           self.stream.seek(tag_offset)
+  #          command["Tags"] = self.read_tag_group()
+   #         self.stream.seek(pos)
         command["Unknown 1"] = self.parse_param("float")
         command["Ignore Same Command"] = self.parse_param("bool")
         command["Interpolation Type"] = self.stream.read_u32()
@@ -673,12 +670,12 @@ class ASB:
         node["Node Type"] = NodeType(self.stream.read_u16()).name
         sync_count = self.stream.read_u8()
         node["No State Transition"] = bool(self.stream.read_u8())
-        #tag_offset = self.stream.read_u32()
-        #if tag_offset != 0:
-        #    pos = self.stream.tell()
-        #    self.stream.seek(tag_offset)
-        #    node["Tags"] = self.read_tag_group()
-        #    self.stream.seek(pos)
+        tag_offset = self.stream.read_u32()
+        if tag_offset != 0:
+            pos = self.stream.tell()
+            self.stream.seek(tag_offset)
+            node["Tags"] = self.read_tag_group()
+            self.stream.seek(pos)
         body_offset = self.stream.read_u32()
         calc_ctrl_index = self.stream.read_u16()
         calc_ctrl_count = self.stream.read_u16()
@@ -1024,8 +1021,8 @@ class ASB:
     def MaterialAnimation(self):
         entry = {}
         index = self.stream.read_u32() - 1
-        if index >= 0:
-            entry["Material Blend Setting"] = self.material_blend[index] # 0x68 index (-1 for index)
+        #if index >= 0:
+            #entry["Material Blend Setting"] = self.material_blend[index] # 0x68 index (-1 for index)
         entry["Animation"] = self.parse_param("string")
         entry["Is Loop"] = self.parse_param("bool") # loop flag
         offsets, transitions, event, frame, state = self.read_connections()
@@ -1570,8 +1567,8 @@ class ASB:
             offsets["EXB"] = 0
         offsets["ASMarkings"] = offset
         offset += 4 + 12 * len(self.as_markings)
-        offsets["Material Blend"] = offset
-        offset += 4 + 8 * len(self.material_blend)
+        #offsets["Material Blend"] = offset
+        #offset += 4 + 8 * len(self.material_blend)
         offsets["Enum"] = offset
         offset += 4
         offsets["Strings"] = offset
@@ -1854,7 +1851,7 @@ class ASB:
             buffer.write(u32(offsets["ASMarkings"]))
             buffer.write(u32(offsets["EXB"]))
             buffer.write(u32(offsets["Command Groups"]))
-            buffer.write(u32(offsets["Material Blend"]))
+            #buffer.write(u32(offsets["Material Blend"]))
             for command in self.commands:
                 buffer.add_string(command["Name"])
                 buffer.write(u32(buffer._string_refs[command["Name"]]))
@@ -1948,14 +1945,14 @@ class ASB:
                         buffer.write(u32(event_index))
                         event_index += 1
                         self.write_connections(buffer, body, node["Node Type"])
-                    elif node["Node Type"] == "MaterialAnimation":
-                        if "Material Blend Setting" in body:
-                            buffer.write(u32(self.material_blend.index(body["Material Blend Setting"]) + 1))
-                        else:
-                            buffer.write(u32(0))
-                        self.write_parameter(buffer, body["Animation"])
-                        self.write_parameter(buffer, body["Is Loop"])
-                        self.write_connections(buffer, body, node["Node Type"])
+                    #elif node["Node Type"] == "MaterialAnimation":
+                        #if "Material Blend Setting" in body:
+                        #    buffer.write(u32(self.material_blend.index(body["Material Blend Setting"]) + 1))
+                        #else:
+                        #    buffer.write(u32(0))
+                        #self.write_parameter(buffer, body["Animation"])
+                        #self.write_parameter(buffer, body["Is Loop"])
+                        #self.write_connections(buffer, body, node["Node Type"])
                     elif node["Node Type"] == "FrameController":
                         self.write_parameter(buffer, body["Animation Rate"])
                         self.write_parameter(buffer, body["Start Frame"])
@@ -2346,11 +2343,11 @@ class ASB:
                 for string in triplet:
                     buffer.add_string(string)
                     buffer.write(u32(buffer._string_refs[string]))
-            buffer.write(u32(len(self.material_blend)))
-            for entry in self.material_blend:
-                buffer.add_string(entry["Name"])
-                buffer.write(u32(buffer._string_refs[entry["Name"]]))
-                buffer.write(f32(entry["Blend Start"]))
+            #buffer.write(u32(len(self.material_blend)))
+            #for entry in self.material_blend:
+                #buffer.add_string(entry["Name"])
+                #buffer.write(u32(buffer._string_refs[entry["Name"]]))
+                #buffer.write(f32(entry["Blend Start"]))
             buffer.write(u32(0)) # enum resolve
             buffer.write(buffer._strings)
             buffer.seek(0x50)
