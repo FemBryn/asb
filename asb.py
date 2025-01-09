@@ -445,7 +445,6 @@ class ASB:
         command["GUID"] = self.read_guid()
         command["Node Index"] = self.stream.read_u16()
         self.stream.read(2) # a second node index in AINB but I haven't seen it ever used and it's always 0 so might be padding
-        print(command)
         return command
     
     def read_event_param(self):
@@ -747,10 +746,18 @@ class ASB:
         return node
     
     def read_connections(self):
+        #Hey! I'm a splatoon modder working on converting some totk tools to be compatabile with S3 Files, and I've been working on ASB files, but I've reached somewhat of a point of confusion. I've managed to change all (Documented?) differences between version 417 and 40F, and that did fix at least some files, however there are still issues with nodes that (I assume?) contain events? The game uses BAEV only sometimes. The only way I've gotten those files to read was to make the connections return entirely empty lists, however
+        #print(hex(self.stream.tell()))
         offsets = {"State" : [], "Unk" : [], "Child" : [], "State Transition" : [], "Event" : [], "Frame Controls" : []}
+        transition = []
+        event = []
+        frame = []
+        state = []
+        return offsets, transition, event, frame, state
         # This type is used by State Connections but I haven't seen any these nodes used ever
         state_count = self.stream.read_u8()
-        state_index = self.stream.read_u8() # base index, same goes for the other types
+        state_index = self.stream.read_u8()
+        # base index, same goes for the other types
         # Appear to be unused as far as I can tell
         unknown_count = self.stream.read_u8()
         unknown_index = self.stream.read_u8()
@@ -777,6 +784,7 @@ class ASB:
         for i in range(frame_count):
             offsets["Frame Controls"].append(self.stream.read_u32())
         state = []
+        print(event_count)
         if offsets["State"]:
             for offset in offsets["State"]:
                 self.stream.seek(offset)
@@ -1945,14 +1953,14 @@ class ASB:
                         buffer.write(u32(event_index))
                         event_index += 1
                         self.write_connections(buffer, body, node["Node Type"])
-                    #elif node["Node Type"] == "MaterialAnimation":
+                    elif node["Node Type"] == "MaterialAnimation":
                         #if "Material Blend Setting" in body:
                         #    buffer.write(u32(self.material_blend.index(body["Material Blend Setting"]) + 1))
                         #else:
-                        #    buffer.write(u32(0))
-                        #self.write_parameter(buffer, body["Animation"])
-                        #self.write_parameter(buffer, body["Is Loop"])
-                        #self.write_connections(buffer, body, node["Node Type"])
+                        buffer.write(u32(0))
+                        self.write_parameter(buffer, body["Animation"])
+                        self.write_parameter(buffer, body["Is Loop"])
+                        self.write_connections(buffer, body, node["Node Type"])
                     elif node["Node Type"] == "FrameController":
                         self.write_parameter(buffer, body["Animation Rate"])
                         self.write_parameter(buffer, body["Start Frame"])

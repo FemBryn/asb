@@ -6,5 +6,6 @@ import converter
 
 # optional baev_path argument loads the corresponding BAEV file with the ASB    
 Path = "C:\\Users\\brend\\OneDrive\\Documents\\GitHub\\asb\\"
-Path += "WeaponRollerNormal.root.asb"
-converter.asb_to_json(Path)
+converter.json_to_asb(Path + "SplPlayer.root.json")
+converter.json_to_asb(Path + "WeaponBrushHeavy.root.json")
+converter.json_to_asb(Path + "WeaponRollerNormal.root.json")

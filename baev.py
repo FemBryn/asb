@@ -60,7 +60,7 @@ class BAEV:
         self.filename = filename
         self.stream = stream
         self.string_pool = string_pool
-        with open("events.json", "r") as f:
+        with open("NewEvents.json", "r") as f:
             self.event_list = json.load(f)
 
     @classmethod
